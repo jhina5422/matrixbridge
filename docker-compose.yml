@@ -1,0 +1,13 @@
+services:
+  matrix-discord-bridge:
+    image: halfshot/matrix-appservice-discord:latest
+    container_name: matrix-discord-bridge
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${BRIDGE_PORT:-9005}:9005"
+    volumes:
+      - ./config/config.sample.yaml:/data/config.yaml:ro
+      - ./data:/data
+    command: ["node", "build/src/discordas.js", "-p", "9005", "-c", "/data/config.yaml"]
