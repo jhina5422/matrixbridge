@@ -200,7 +200,7 @@ Get this from the application's **General Information** page. This is typically 
 
 #### `DISCORD_GUILD_ID`
 
-This starter keeps it as an optional documentation value so you can record the main Discord server you plan to bridge. If you only run one guild, putting the ID here makes operations easier later.
+This starter keeps it as an optional documentation value so you can record the main Discord server you plan to bridge. If you only run one guild, putting the ID here makes operations easier later. It is **not** consumed by `docker-compose.yml`, `config/config.sample.yaml`, or `scripts/generate-registration.sh`, so it does not limit the bridge to a single Discord server.
 
 ### 5. Generate the secrets used between Synapse and the bridge
 
@@ -474,6 +474,18 @@ Once the bridge is online and the bot has joined your server:
 3. Follow the upstream bridge conventions for portal rooms and provisioning.
 
 Because bridge capabilities can change between upstream releases, check the upstream README and config docs before enabling advanced features such as provisioning, webhooks, or metrics.
+
+## Does this support multiple Discord servers?
+
+Yes, with the current starter layout, nothing in the checked-in config restricts the bridge to a single Discord guild. The active runtime inputs are the bot token, client ID, Matrix settings, and bridge prefixes, and there is no guild allow-list in `config/config.sample.yaml`.
+
+In practical terms, that means:
+
+- one Discord bot can be invited to more than one server;
+- this starter's `DISCORD_GUILD_ID` value is only an operator note in `.env.example`; and
+- the bridge data for all connected guilds would be stored together under the same `data/` directory for this bridge instance.
+
+If you want to bridge multiple Discord servers through one deployment, the simplest model is to invite the same bot to each server and manage the room/channel mapping at the bridge level. If you want hard isolation between servers, run separate bridge instances with separate `.env`, `data/`, and registration files.
 
 ## Updating the bridge image
 
