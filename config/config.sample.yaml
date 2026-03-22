@@ -1,0 +1,32 @@
+bridge:
+  domain: "${MATRIX_DOMAIN}"
+  homeserverUrl: "${MATRIX_HOMESERVER_URL}"
+  port: 9005
+  bindAddress: "${BRIDGE_BIND_ADDRESS}"
+  disableContext: false
+  prefix:
+    alias: "${APPSERVICE_ALIAS_PREFIX}"
+    userId: "${APPSERVICE_USER_PREFIX}"
+  permissions:
+    "*": "relay"
+
+database:
+  filename: "/data/discord.db"
+  userStorePath: "/data/user-store.db"
+  roomStorePath: "/data/room-store.db"
+
+auth:
+  id: "${APPSERVICE_ID}"
+  botToken: "${DISCORD_BOT_TOKEN}"
+  clientId: "${DISCORD_CLIENT_ID}"
+
+logging:
+  console: "debug"
+  files: false
+
+metrics:
+  enabled: false
+
+provisioning:
+  enabled: false
+  secret: "${PROVISIONING_SECRET}"
