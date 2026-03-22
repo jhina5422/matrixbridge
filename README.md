@@ -106,6 +106,157 @@ After this step you should have:
 
 ## Step 3: Fill in the environment file
 
+### Configuration walkthrough
+
+This section is meant to help you decide what every important setting should be before you start the container.
+
+### 1. Pick your Matrix identity values
+
+These settings tell the bridge what Matrix homeserver it belongs to.
+
+#### `MATRIX_DOMAIN`
+
+Set this to the Matrix server name users see in Matrix IDs.
+
+Examples:
+
+- `matrix.example.com`
+- `chat.example.org`
+
+If one of your users logs in as `@alice:matrix.example.com`, then `MATRIX_DOMAIN` should usually be `matrix.example.com`.
+
+#### `MATRIX_HOMESERVER_URL`
+
+Set this to the full public base URL of the homeserver.
+
+Examples:
+
+- `https://matrix.example.com`
+- `https://chat.example.org`
+
+Use the public HTTPS URL that clients and remote services can reach. Avoid `http://localhost` or a private container hostname unless the bridge is guaranteed to use the exact same internal network path and you understand the tradeoffs.
+
+### 2. Decide how the bridge should appear inside Matrix
+
+These values control the appservice identity and the naming pattern for bridged users and aliases.
+
+#### `APPSERVICE_ID`
+
+A short identifier for the appservice. `discord` is a sensible default and usually does not need to change.
+
+#### `APPSERVICE_BOT_LOCALPART`
+
+The localpart for the bridge bot account, without the leading `@` and without the homeserver name.
+
+Example:
+
+- `discordbot` becomes `@discordbot:matrix.example.com`
+
+#### `APPSERVICE_SENDER_LOCALPART`
+
+The sender localpart written into the registration file. In most setups this should match `APPSERVICE_BOT_LOCALPART`.
+
+#### `APPSERVICE_USER_PREFIX`
+
+The prefix used for virtual Matrix users representing Discord users.
+
+Example:
+
+- `_discord_` may produce users such as `@_discord_someuser:matrix.example.com`
+
+Pick a prefix that is unlikely to clash with real users.
+
+#### `APPSERVICE_ALIAS_PREFIX`
+
+The prefix used for bridged room aliases.
+
+Example:
+
+- `discord` may produce aliases like `#discord_some-channel:matrix.example.com`
+
+### 3. Set the bridge listener values
+
+These settings define where the bridge process listens inside the container.
+
+#### `BRIDGE_PORT`
+
+The host port published by Docker Compose. `9005` is the default in this repo.
+
+#### `BRIDGE_BIND_ADDRESS`
+
+The address the bridge binds to inside the container. Leave this as `0.0.0.0` unless you have a very specific reason to restrict it.
+
+### 4. Create the Discord application and bot credentials
+
+You will need two values from Discord:
+
+#### `DISCORD_BOT_TOKEN`
+
+Get this from the **Bot** page in the Discord developer portal. This is the secret the bridge uses to log into Discord.
+
+#### `DISCORD_CLIENT_ID`
+
+Get this from the application's **General Information** page. This is typically used when generating bot invite links and for bridge-side Discord integration logic.
+
+#### `DISCORD_GUILD_ID`
+
+This starter keeps it as an optional documentation value so you can record the main Discord server you plan to bridge. If you only run one guild, putting the ID here makes operations easier later.
+
+### 5. Generate the secrets used between Synapse and the bridge
+
+These secrets should be long, random, and unique.
+
+#### `APPSERVICE_AS_TOKEN`
+
+Used by the appservice when authenticating to Synapse.
+
+#### `APPSERVICE_HS_TOKEN`
+
+Used by Synapse when sending requests to the bridge.
+
+#### `PROVISIONING_SECRET`
+
+Reserved for provisioning features. Even if you leave provisioning disabled today, set this to a strong value so the file is ready for future use.
+
+A convenient approach is to run this three times:
+
+```bash
+openssl rand -hex 32
+```
+
+### 6. Review the generated config behavior
+
+When you run `./scripts/generate-registration.sh`, the repo renders `config/config.sample.yaml` into `data/config.yaml` using the values from `.env`.
+
+That means:
+
+- update `.env` first;
+- rerun the generation script after changing important environment-driven settings; and
+- keep a backup of `.env` and `data/` once the bridge is working.
+
+### Configuration reference
+
+Use this table when filling out `.env`.
+
+| Variable | Required | What it controls | How to choose a value |
+| --- | --- | --- | --- |
+| `MATRIX_DOMAIN` | Yes | Matrix server name used in user IDs and aliases. | Your public Matrix domain, such as `matrix.example.com`. |
+| `MATRIX_HOMESERVER_URL` | Yes | Base URL the bridge uses to talk to Synapse. | The public HTTPS URL of the homeserver. |
+| `BRIDGE_PORT` | Usually | Docker-published bridge port. | Keep `9005` unless you have a port conflict. |
+| `BRIDGE_BIND_ADDRESS` | Usually | Bind address inside the container. | Keep `0.0.0.0`. |
+| `DISCORD_BOT_TOKEN` | Yes | Auth token for the Discord bot. | Copy from the Discord developer portal. |
+| `DISCORD_CLIENT_ID` | Yes | Discord application client ID. | Copy from the application details page. |
+| `DISCORD_GUILD_ID` | Optional | Administrative reference for your main guild. | Use your Discord server ID if helpful. |
+| `APPSERVICE_ID` | Yes | Synapse appservice identifier. | Usually `discord`. |
+| `APPSERVICE_BOT_LOCALPART` | Yes | Matrix localpart of the bridge bot account. | Usually `discordbot`. |
+| `APPSERVICE_SENDER_LOCALPART` | Yes | Sender localpart written in the registration file. | Usually the same as `APPSERVICE_BOT_LOCALPART`. |
+| `APPSERVICE_USER_PREFIX` | Yes | Prefix for virtual Matrix users representing Discord users. | Choose a unique prefix like `_discord_`. |
+| `APPSERVICE_ALIAS_PREFIX` | Yes | Prefix for bridged room aliases. | Choose a readable unique value like `discord`. |
+| `APPSERVICE_AS_TOKEN` | Yes | Appservice-to-Synapse auth token. | Generate a strong random string. |
+| `APPSERVICE_HS_TOKEN` | Yes | Synapse-to-appservice auth token. | Generate a different strong random string. |
+| `PROVISIONING_SECRET` | Recommended | Secret for provisioning endpoints. | Generate a third strong random string. |
+
+
 Open `.env` in your preferred editor and replace every placeholder with real values.
 
 ```bash
